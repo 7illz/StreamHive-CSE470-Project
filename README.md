@@ -1,42 +1,47 @@
 # Streamhive
 
-Streamhive is a robust video streaming platform built with the Laravel framework. It provides users with a seamless experience to discover, watch, and save their favorite movies and series. The platform also includes comprehensive administration tools for content and user management.
+Streamhive is a full-stack streaming platform built on Laravel that provides users with a comprehensive experience to discover, watch, and save their favorite movies and series. The application features a fully responsive customer interface and a protected administration dashboard for content managers to oversee the catalog, subscriptions, and platform users.
 
-## 🚀 Features
+## Features
 
-### For Users
-*   **Authentication & Profiles:** Secure login, registration, and user profile management.
-*   **Content Library:** Browse, search, and watch a wide variety of movies and series.
-*   **Watchlist:** Save your favorite content to watch later.
-*   **Subscriptions & Payments:** Choose and manage subscription plans directly from your account.
-*   **Chat System:** Interactive messaging feature to connect with support or other users.
-*   **Feedback:** Leave feedback on the platform or specific content.
+- **Content Browsing:** Browse movies and series with search functionality.
+- **User Authentication:** Secure sign-up, login, and robust session management.
+- **User Profiles:** Dedicated profile pages with updatable personal information.
+- **Watchlist System:** Save favorite movies and series to a persistent personal watchlist.
+- **Subscription Management:** Choose tiers, process payments, and manage active plans.
+- **Admin Dashboard:** Role-protected dashboard to manage users, movies, series, and subscriptions.
+- **Real-Time Chat:** Interactive messaging system to chat with other users or support.
+- **User Feedback:** Built-in forms for users to submit feedback and reviews.
+- **PDF Reporting:** Dynamic generation of user/subscription reports as downloadable PDFs.
+- **Cloud Storage:** Integrated with AWS S3 for scalable media and content hosting.
 
-### For Admins & Content Managers
-*   **Admin Dashboard:** Comprehensive overview of platform metrics.
-*   **Content Management:** Add, edit, and remove movies and series.
-*   **User Management:** Oversee registered users and their subscription statuses.
-*   **Reporting:** Generate downloadable PDF reports for users and subscriptions.
+## Tech stack
 
-## 🛠️ Tech Stack
+| Area | Technologies |
+| --- | --- |
+| Frontend | Laravel Blade, Vite, HTML/CSS, Axios |
+| Backend | Laravel 10, PHP 8.1+ |
+| Database | MySQL, Eloquent ORM |
+| Storage & Media | AWS S3 (`league/flysystem-aws-s3-v3`) |
+| Real-time | Pusher (WebSocket Broadcasting) |
+| Utilities | `barryvdh/laravel-dompdf` (PDF Generation) |
 
-*   **Backend:** [Laravel 10](https://laravel.com/) (PHP 8.1+)
-*   **Frontend:** Laravel Blade Templates, Vite, Axios
-*   **Database:** MySQL
-*   **Packages:** 
-    *   `barryvdh/laravel-dompdf` (PDF Generation)
-    *   `league/flysystem-aws-s3-v3` (AWS S3 Cloud Storage Integration)
+## Project structure
 
-## ⚙️ Requirements
-
-*   PHP >= 8.1
-*   Composer
-*   MySQL or any compatible database
-*   Node.js & NPM (for frontend assets)
-
-## 💻 Local Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/your-username/Streamhive-main.git
-   cd Streamhive-main
+```text
+Streamhive-main/
+|-- app/
+|   |-- Http/
+|   |   |-- Controllers/ # HTTP request handlers (Admin, User, Chat, etc.)
+|   |   `-- Middleware/  # Request validation and auth checks
+|   `-- Models/          # Eloquent schemas (User, Movie, Series, Message, etc.)
+|-- config/              # Environment, database, and third-party configuration
+|-- database/            # Migrations, seeders, and model factories
+|-- resources/
+|   |-- css/             # Frontend stylesheets compiled by Vite
+|   |-- js/              # Frontend JavaScript compiled by Vite
+|   `-- views/           # Blade templates for UI, Admin, Auth, Chat, and Emails
+|-- routes/
+|   |-- api.php          # API routes
+|   `-- web.php          # Main application web routes
+`-- public/              # Static assets and Vite build output
