@@ -1,20 +1,20 @@
 # Streamhive
 
-Streamhive is a full-stack streaming platform built with Laravel. It provides a user-facing storefront for browsing and watching movies and series, a subscription and payment system, a personal watchlist, real-time user-to-user messaging, and a protected admin dashboard for managing the entire platform.
+Streamhive is a full-stack streaming platform built with Laravel. It provides a user-facing storefront for browsing and watching movies and series, a subscription and payment system, a personal watchlist, user-to-user messaging, and an admin dashboard for managing the platform.
 
 ## Features
 
-- Email/password authentication with role-based access control (user and admin)
+- Email/password authentication with role-aware login flows for users and admins
 - Browsable movie and series catalog with search and like/trending support
 - Subscription tiers (Free, Individual, Family) with coupon code support
 - Payment flow with automated PDF receipt generation and email delivery
 - Personal watchlist per user with add and remove support
-- Real-time messaging between users (chat system)
+- User-to-user messaging with periodic AJAX updates and unread counts
 - User profile management with name and password update
 - Per-session usage time tracking (login/logout timestamps)
 - Downloadable PDF user report (profile, subscription, watchlist summary)
 - User feedback submission with aggregate star rating display
-- Protected admin dashboard covering users, movies, series, subscriptions, and watchlists
+- Authenticated admin dashboard pages covering users, movies, series, subscriptions, and watchlists
 - Admin controls: add/delete content, assign roles, and update subscription status
 
 ## Tech Stack
@@ -22,7 +22,7 @@ Streamhive is a full-stack streaming platform built with Laravel. It provides a 
 | Area | Technologies |
 |---|---|
 | Backend | PHP 8.1, Laravel 10, Laravel Sanctum |
-| Frontend | Blade templates, Vite, Tailwind CSS |
+| Frontend | Blade templates, Vite, custom CSS, JavaScript |
 | Database | MySQL (via Eloquent ORM) |
 | Authentication | Laravel Auth, bcrypt, session-based |
 | PDF Generation | barryvdh/laravel-dompdf |
@@ -67,13 +67,13 @@ Streamhive-main/
 - MySQL
 - Node.js and npm
 - Optional: an SMTP provider or [Mailpit](https://github.com/axllent/mailpit) for local email testing
-- Optional: an AWS S3 bucket for file storage
+- An AWS S3 bucket containing the video library
 
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
-cd Streamhive-main
+git clone https://github.com/7illz/StreamHive-CSE470-Project.git
+cd StreamHive-CSE470-Project
 ```
 
 ### 2. Install Dependencies
@@ -99,27 +99,24 @@ php artisan key:generate
 
 Update `.env` with your own values:
 
-| Variable | Purpose | Example / Default |
+| Variable | Purpose | Recommended local value |
 |---|---|---|
 | `APP_NAME` | Application name shown in emails and UI | `Streamhive` |
 | `APP_URL` | Full base URL of the application | `http://localhost` |
 | `DB_CONNECTION` | Database driver | `mysql` |
 | `DB_HOST` | Database host | `127.0.0.1` |
 | `DB_PORT` | Database port | `3306` |
-| `DB_DATABASE` | Database name | `streamhive` |
+| `DB_DATABASE` | Database name | `streamhive` (create it before migrating) |
 | `DB_USERNAME` | Database username | `root` |
 | `DB_PASSWORD` | Database password | _(empty by default)_ |
 | `MAIL_MAILER` | Mail transport | `smtp` |
 | `MAIL_HOST` | SMTP host | `mailpit` |
 | `MAIL_PORT` | SMTP port | `1025` |
 | `MAIL_FROM_ADDRESS` | Sender address for outgoing emails | `hello@example.com` |
-| `AWS_ACCESS_KEY_ID` | AWS key for S3 file storage | Optional |
-| `AWS_SECRET_ACCESS_KEY` | AWS secret for S3 file storage | Optional |
+| `AWS_ACCESS_KEY_ID` | AWS key for S3 video storage | Your AWS access key |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret for S3 video storage | Your AWS secret key |
 | `AWS_DEFAULT_REGION` | AWS region | `us-east-1` |
-| `AWS_BUCKET` | S3 bucket name | Optional |
-| `PUSHER_APP_ID` | Pusher app ID for broadcasting | Optional |
-| `PUSHER_APP_KEY` | Pusher app key | Optional |
-| `PUSHER_APP_SECRET` | Pusher app secret | Optional |
+| `AWS_BUCKET` | S3 bucket containing movies and series | Your bucket name |
 
 ### 4. Run Migrations
 
@@ -151,6 +148,8 @@ UPDATE users SET role = 'admin' WHERE email = 'your@email.com';
 
 Once logged in as an admin, you will be directed to a decision page where you can choose to enter the admin dashboard or the regular storefront.
 
+> **Security note:** the current application uses the `auth` middleware on admin dashboard pages but does not include dedicated admin-role middleware. Add role authorization before deploying the project publicly.
+
 ## Subscription Plans
 
 | Plan | Price | Coupon (`STREAM50`) |
@@ -165,7 +164,7 @@ After a successful subscription, a PDF receipt is generated automatically and se
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/` | Redirects to login |
+| `GET` | `/` | Displays the login page |
 | `GET / POST` | `/login` | User login |
 | `GET / POST` | `/signup` | User registration |
 | `POST` | `/logout` | User logout |
@@ -177,15 +176,17 @@ After a successful subscription, a PDF receipt is generated automatically and se
 | `POST` | `/addwatchlist` | Add item to watchlist |
 | `DELETE` | `/watchlist/{id}` | Remove item from watchlist |
 | `GET` | `/subscription` | Subscription plans page |
-| `POST` | `/payment` | Initiate payment flow |
+| `GET` | `/payment` | Display the payment page (auth required) |
+| `POST` | `/payment` | Prepare payment details for a selected plan |
 | `PUT` | `/subscription` | Confirm and save subscription |
 | `GET` | `/profile` | User profile page |
 | `PUT` | `/profile/update` | Update name or password |
 | `GET` | `/feedback` | Feedback form with aggregate rating |
 | `POST` | `/store` | Submit feedback |
-| `GET` | `/chat` | Real-time messaging (auth required) |
+| `GET` | `/chat` | User messaging with polling updates (auth required) |
 | `POST` | `/messages` | Send a message |
 | `GET` | `/messages/{user}` | Fetch conversation with a user |
+| `GET` | `/messages/unread/count` | Fetch the unread message count |
 | `GET` | `/generate-report` | Download PDF user report |
 | `GET` | `/admin` | Admin: user management |
 | `GET` | `/admin_movies` | Admin: movie management |
@@ -240,7 +241,7 @@ Or run PHPUnit directly:
 - Set `APP_URL` to your deployed domain.
 - Use a strong, private `APP_KEY` and never commit `.env` files.
 - Configure a real SMTP provider in the `MAIL_*` variables for subscription receipts.
-- Configure `AWS_*` variables if you intend to store uploaded images in S3.
+- Configure `AWS_*` variables and provision the expected S3 content paths; playback uses temporary S3 URLs.
 - Run `php artisan config:cache` and `php artisan route:cache` for improved performance in production.
 - Ensure the `storage/` and `bootstrap/cache/` directories are writable by the web server.
 
